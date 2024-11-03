@@ -1,0 +1,175 @@
+<!--
+Programa:A Fuga do quadrado
+Nome: Daniel Gaziola de Oliveira - Nº: 03 - Turma: 2°L
+Nome: David Wilson Carvalho dos Santos - Nº: 06
+Nome: Henrique Peres Cilia Gonçalves - N°13
+Nome: Joao Victor Ataide Castro Paz - Nº: 15
+Nome: Jorge Vinicius Rocha Cantarinho - Nº: 16
+Nome: Leandro Ghizelini Martins Fernandes - Nº: 17
+Nome: Natanael Madeira Rodrigues Santos - Nº: 20
+DESCRIÇÃO: um jogo onde um quadrado controlado pelo jogador ao colidir com outro quadrado controlado por outro jogador para.
+-->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <title>Fuga Do Quadrado</title>
+    <meta charset="UTF-8">
+    <style>
+        /* Estilo do canvas */
+        canvas {
+            border: 5px solid #fd6081;
+            background-color: #f3ffeb;
+        }
+    </style>
+    <script>
+        // Variáveis globais para os componentes do jogo
+        var Fugitivo; // Quadrado controlado pelo Jogador 1
+        var Pegador; // Quadrado controlado pelo Jogador 2
+        var teclas = {}; // Objeto para armazenar as teclas pressionadas
+
+        // Função para iniciar o jogo
+        function iniciarJogo() {
+            Fugitivo = new componente(30, 30, "#f1396d", 10, 120); // Inicializa o Fugitivo
+            Pegador = new componente(30, 30, "#8f9924", 400, 120); // Inicializa o Pegador
+            areaDoJogo.iniciar(); // Inicia a área de jogo
+        }
+
+        // Objeto que representa a área do jogo (canvas)
+        var areaDoJogo = {
+            canvas: document.createElement("canvas"),
+            iniciar: function () {
+                this.canvas.width = 480;
+                this.canvas.height = 270;
+                this.contexto = this.canvas.getContext("2d");
+                document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                this.intervalo = setInterval(atualizarAreaDoJogo, 20); // Atualiza o jogo a cada 20 milisegundos
+
+                // Eventos de teclado para detectar teclas pressionadas e soltas
+                window.addEventListener('keydown', function (evento) { //lembrando keydown quando uma tecla é segurada
+                    teclas[evento.key] = true;
+                });
+                window.addEventListener('keyup', function (evento) { //lembradno keyup quando uma tecla é solta
+                    teclas[evento.key] = false;
+                });
+            },
+            // Função para limpar a área do canvas
+//quando ele fala limpar function ou parar function ele esta se referindo a function iniciarjogo que é a responsavel por iniciar o canvas e os quadrados dentro dele.
+            limpar: function () {   
+                this.contexto.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            },
+            // Função para parar o jogo
+            parar: function () {
+                clearInterval(this.intervalo);
+            }
+        };
+
+        // Função que define o componente (quadrado) do jogo, no caso os dois quadrados que temos. os dois usufruirão dessa mesma função
+        function componente(largura, altura, cor, x, y) {
+            this.largura = largura;
+            this.altura = altura;
+            this.velocidadeX = 0;
+            this.velocidadeY = 0;
+            this.x = x;
+            this.y = y;
+
+            // Função para atualizar o componente no canvas
+            this.atualizar = function () {
+                ctx = areaDoJogo.contexto;
+                ctx.fillStyle = cor;
+                ctx.fillRect(this.x, this.y, this.largura, this.altura);
+            };
+
+            // Função para verificar colisão com outro componente
+            this.colidirCom = function (pegadorComponente) {
+                var fugitivoEsquerdo = this.x;
+                var fugitivoDireito = this.x + this.largura;
+                var fugitivoTopo = this.y;
+                var fugitivoBaixo = this.y + this.altura;
+                var pegadorEsquerdo = pegadorComponente.x;
+                var pegadorDireito = pegadorComponente.x + pegadorComponente.largura;
+                var pegadorTopo = pegadorComponente.y;
+                var pegadorBaixo = pegadorComponente.y + pegadorComponente.altura;
+               // Retorna verdadeiro se houver colisão, falso caso contrário
+// A função verifica as extremidades do Fugitivo e do Pegador:
+// Se o Fugitivo ultrapassar as extremidades do Pegador em qualquer direção,
+// a função retorna `false` (não houve colisão). Se todas as extremidades do Fugitivo
+// estiverem dentro dos limites do Pegador, retorna `true`, indicando colisão.
+                return !(
+                    fugitivoBaixo < pegadorTopo || fugitivoTopo > pegadorBaixo ||
+                    fugitivoDireito < pegadorEsquerdo || fugitivoEsquerdo > pegadorDireito
+                );
+            };
+
+            // Função para atualizar a posição do componente com base na velocidade
+            this.novaPosicao = function () {
+                this.x += this.velocidadeX;
+                this.y += this.velocidadeY;
+                // Limita a posição do componente para mantê-lo dentro da área do jogo
+                this.limitarTopo();
+                this.limitarBaixo();
+                this.limitarEsquerda();
+                this.limitarDireita();
+            };
+
+            // Limitações para os quadrados não passarem das barreiras do canva.
+            this.limitarTopo = function () {
+                if (this.y < 0) this.y = 0;
+            };
+            this.limitarBaixo = function () {
+                if (this.y > areaDoJogo.canvas.height - this.altura) {
+                    this.y = areaDoJogo.canvas.height - this.altura;
+                }
+            };
+            this.limitarEsquerda = function () {
+                if (this.x < 0) this.x = 0;
+            };
+            this.limitarDireita = function () {
+                if (this.x > areaDoJogo.canvas.width - this.largura) {
+                    this.x = areaDoJogo.canvas.width - this.largura;
+                }
+            };
+        }
+
+        // Função que atualiza o estado do jogo a cada intervalo
+        function atualizarAreaDoJogo() {
+            // Verifica colisão entre o Fugitivo e o Pegador
+            if (Fugitivo.colidirCom(Pegador)) {
+                areaDoJogo.parar();
+                alert("Colisão! Game Over.");
+            } else {
+                areaDoJogo.limpar();
+
+                // Movimentação do Fugitivo com teclas WASD
+                Fugitivo.velocidadeX = 0;
+                Fugitivo.velocidadeY = 0;
+                if (teclas["a"]) { Fugitivo.velocidadeX = -1; }
+                if (teclas["d"]) { Fugitivo.velocidadeX = 1; }
+                if (teclas["w"]) { Fugitivo.velocidadeY = -1; }
+                if (teclas["s"]) { Fugitivo.velocidadeY = 1; }
+
+                // Movimentação do Pegador com teclas de seta
+                Pegador.velocidadeX = 0;
+                Pegador.velocidadeY = 0;
+                if (teclas["ArrowLeft"]) { Pegador.velocidadeX = -1; }
+                if (teclas["ArrowRight"]) { Pegador.velocidadeX = 1; }
+                if (teclas["ArrowUp"]) { Pegador.velocidadeY = -1; }
+                if (teclas["ArrowDown"]) { Pegador.velocidadeY = 1; }
+               
+                // Atualiza as posições dos componentes
+                Fugitivo.novaPosicao();
+                Pegador.novaPosicao();
+               
+                // Renderiza os componentes no canvas
+                Fugitivo.atualizar();
+                Pegador.atualizar();
+            }
+        }
+    </script>
+</head>
+<body onload="iniciarJogo();">
+        <!-- Instruções de controle para cada jogador -->
+        <p style="text-align:center;">Jogador 1 (Vermelho): W, A, S, D</p>
+        <p style="text-align:center;">Jogador 2 (Verde): ↑, ←, ↓, →</p>
+</body>
+</html>
